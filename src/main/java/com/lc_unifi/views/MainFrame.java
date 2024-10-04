@@ -28,9 +28,9 @@ public class MainFrame extends JFrame {
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
-        JLabel placeholderLabel = new JLabel("Calendar view", SwingConstants.CENTER);
-        mainPanel.add(placeholderLabel, BorderLayout.CENTER);
-        this.getContentPane().add(mainPanel);
+        CalendarPanel calendarPanel = new CalendarPanel();
+        mainPanel.add(calendarPanel, BorderLayout.CENTER);
+        setContentPane(mainPanel);
     }
 
     public static void main(String[] args) {
