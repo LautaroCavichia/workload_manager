@@ -30,6 +30,10 @@ public class Worker {
     public Worker() {
 
     }
+
+    protected Store getStore() {
+        return this.mainStore;
+    }
 }
 
 
