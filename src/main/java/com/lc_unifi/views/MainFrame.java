@@ -16,17 +16,20 @@ import java.awt.*;
 
 
 public class MainFrame extends JFrame {
-    public MainFrame(CalendarPanel calendarPanel){
+    private Map<LocalDate, List<Shift>> shiftsPerDay;
+    private JPanel calendarView;
+    public MainFrame(Map<LocalDate, List<Shift>> shiftsPerDay){
         setTitle("Workload Management System");
         setSize(1280, 720);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        this.shiftsPerDay = shiftsPerDay;
 
-        InitializeComponents(calendarPanel);
+        InitializeComponents();
 
     }
 
-    private void InitializeComponents(CalendarPanel calendarPanel){
+    private void InitializeComponents(){
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         JMenuItem exitMenuItem = new JMenuItem("Exit");
@@ -37,8 +40,44 @@ public class MainFrame extends JFrame {
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.add(calendarPanel, BorderLayout.CENTER);
+
+        JPanel toggleViewPanel = new JPanel();
+        JButton toggleViewButton = new JButton("Switch to Weekly View");
+        JMenuItem toggleViewMenuItem = new JMenuItem("Switch to Weekly View");
+        fileMenu.add(toggleViewMenuItem);
+        toggleViewMenuItem.addActionListener(e -> {
+            if (calendarView instanceof MonthlyView){
+                switchToWeeklyView();
+                toggleViewButton.setText("Switch to Monthly View");
+            }
+            else{
+                switchToMonthlyView();
+                toggleViewButton.setText("Switch to Weekly View");
+            }
+        });
+        toggleViewPanel.add(toggleViewButton);
+        mainPanel.add(toggleViewPanel, BorderLayout.NORTH);
+
+        calendarView = new MonthlyView(shiftsPerDay);
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(calendarView, BorderLayout.CENTER);
         setContentPane(mainPanel);
+    }
+
+    private void switchToMonthlyView(){
+        MonthlyView monthlyView = new MonthlyView(shiftsPerDay);
+        setContentPane(monthlyView);
+        revalidate();
+        repaint();
+    }
+
+    private void switchToWeeklyView(){
+        LocalDate currentWeekStart = LocalDate.now().with(java.time.DayOfWeek.MONDAY);
+        WeeklyView weeklyView = new WeeklyView(shiftsPerDay, currentWeekStart);
+
+        setContentPane(weeklyView);
+        revalidate();
+        repaint();
     }
 
     public static void main(String[] args) {
@@ -58,9 +97,8 @@ public class MainFrame extends JFrame {
         shiftsForDay2.add(new Shift(new Worker("Worker", "Firenze",50), startTime.plusHours(16), startTime.plusHours(24)));
         shiftsPerDay.put(LocalDate.of(2024,10,5), shiftsForDay2);
 
-        CalendarPanel calendarPanel = new CalendarPanel(shiftsPerDay);
         SwingUtilities.invokeLater(() -> {
-            MainFrame mainFrame = new MainFrame(calendarPanel);
+            MainFrame mainFrame = new MainFrame(shiftsPerDay);
             mainFrame.setVisible(true);
         });
     }
