@@ -13,18 +13,10 @@ public class Worker {
     private List<Request> daysOffRequests;
     private List<Request> holidayRequests;
 
-    public Worker(int id, String name, String lastName, String email, String phoneNumber, Store mainStore,
-                  int contractHours, List<com.lc_unifi.models.Request> daysOffRequests, List<com.lc_unifi.models.Request> holidayRequests) {
-        this.id = id;
+    public Worker(String name, String lastName, int contractHours) {
         this.name = name;
         this.lastName = lastName;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.mainStore = mainStore;
         this.contractHours = contractHours;
-        this.daysOffRequests = daysOffRequests;
-        this.holidayRequests = holidayRequests;
-
     }
 
     public Worker() {
@@ -33,6 +25,10 @@ public class Worker {
 
     protected Store getStore() {
         return this.mainStore;
+    }
+
+    public String getLastName() {
+        return lastName;
     }
 }
 

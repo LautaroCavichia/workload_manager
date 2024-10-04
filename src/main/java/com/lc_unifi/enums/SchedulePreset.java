@@ -2,34 +2,40 @@ package com.lc_unifi.enums;
 
 import com.lc_unifi.models.Shift;
 import java.time.LocalTime;
+import java.util.List;
+
 import com.lc_unifi.models.Store;
+import com.lc_unifi.models.Worker;
 
 public enum SchedulePreset {
     TWO_SHORT("2 Persone (Corto)", (store) -> {
         LocalTime openingTime = store.getOpeningTime();
         LocalTime closingTime = store.getClosingTime();
+        Worker worker1 = store.getWorkers().getFirst();
 
-        Shift firstShift = new Shift(openingTime, openingTime.plusHours(5).plusMinutes(30));
-        Shift secondShift = new Shift(openingTime.plusHours(5).plusMinutes(30), closingTime);
+        Shift firstShift = new Shift(worker1, openingTime, openingTime.plusHours(5).plusMinutes(30));
+        Shift secondShift = new Shift(worker1, openingTime.plusHours(5).plusMinutes(30), closingTime);
 
         return new Shift[] {firstShift, secondShift};
     }),
     TWO_LONG("2 Persone (Lungo)", (store) -> {
         LocalTime openingTime = store.getOpeningTime();
         LocalTime closingTime = store.getClosingTime();
+        Worker worker1 = store.getWorkers().getFirst();
 
-        Shift firstShift = new Shift(openingTime, openingTime.plusHours(8));
-        Shift secondShift = new Shift(openingTime.plusHours(2), closingTime);
+        Shift firstShift = new Shift(worker1, openingTime, openingTime.plusHours(8));
+        Shift secondShift = new Shift(worker1, openingTime.plusHours(2), closingTime);
 
         return new Shift[] {firstShift, secondShift};
     }),
     THREE_SHORT("3 Persone (Corto)", (store) -> {
         LocalTime openingTime = store.getOpeningTime();
         LocalTime closingTime = store.getClosingTime();
+        Worker worker1 = store.getWorkers().getFirst();
 
-        Shift firstShift = new Shift(openingTime, openingTime.plusHours(5).plusMinutes(30));
-        Shift secondShift = new Shift(openingTime.plusHours(2), openingTime.plusHours(7));
-        Shift thirdShift = new Shift(openingTime.plusHours(5).plusMinutes(300), closingTime);
+        Shift firstShift = new Shift(worker1, openingTime, openingTime.plusHours(5).plusMinutes(30));
+        Shift secondShift = new Shift(worker1, openingTime.plusHours(2), openingTime.plusHours(7));
+        Shift thirdShift = new Shift(worker1, openingTime.plusHours(5).plusMinutes(300), closingTime);
 
         return new Shift[] {firstShift, secondShift, thirdShift};
     });

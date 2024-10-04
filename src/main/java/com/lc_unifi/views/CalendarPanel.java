@@ -1,17 +1,24 @@
 package com.lc_unifi.views;
 
+import com.lc_unifi.models.Worker;
+import com.lc_unifi.models.Shift;
+
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
+import java.util.Map;
 
 public class CalendarPanel extends JPanel{
     private YearMonth currentYearMonth;
     private JPanel calendarGrid;
     private JLabel monthLabel;
+    private Map<LocalDate, List<Shift>> shiftsPerDay;
 
-    public CalendarPanel(){
+    public CalendarPanel(Map<LocalDate, List<Shift>> shiftsPerDay){
         currentYearMonth = YearMonth.now();
+        this.shiftsPerDay = shiftsPerDay;
         initializeComponents();
     }
 
@@ -55,7 +62,8 @@ public class CalendarPanel extends JPanel{
         calendarGrid.removeAll();
         updateMonthLabel();
 
-        String[] daysOfWeek = {"Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"}; //Starts from Monday (requirement)
+        //String[] daysOfWeek = {"Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"}; //Starts from Monday (requirement)
+        String[] daysOfWeek = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
         for(String day : daysOfWeek){
             JLabel dayLabel = new JLabel(day, SwingConstants.CENTER);
             dayLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -73,11 +81,31 @@ public class CalendarPanel extends JPanel{
         int daysInMonth = currentYearMonth.lengthOfMonth();
         for(int i = 1; i <= daysInMonth; i++){
             LocalDate date = currentYearMonth.atDay(i);
-            JButton dayButton = new JButton(String.valueOf(i));
-            dayButton .addActionListener(e -> {
-                JOptionPane.showMessageDialog(this, "Hai selezionato " + date);
-            });
-            calendarGrid.add(dayButton);
+            JPanel dayPanel = new JPanel();
+            dayPanel.setLayout(new BoxLayout(dayPanel, BoxLayout.Y_AXIS));
+            dayPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+            JLabel dayLabel = new JLabel(String.valueOf(i), SwingConstants.CENTER);
+            dayPanel.add(dayLabel);
+
+            if(shiftsPerDay.containsKey(date)){
+                List<Shift> shifts = shiftsPerDay.get(date);
+                for (Shift shift : shifts) {
+                    Worker worker = shift.getWorker();
+                    JLabel workerLabel = new JLabel(worker.getLastName() + " " + shift.getStartTime().toString()
+                            + " - " + shift.getEndTime().toString());
+                    workerLabel.setOpaque(true);
+                    workerLabel.setForeground(Color.WHITE);
+                    workerLabel.setBackground(getWorkerColor(worker));
+                    dayPanel.add(workerLabel);
+                }
+            }
+            else {
+                JLabel noShiftLabel = new JLabel("No shift", SwingConstants.CENTER);
+                dayPanel.add(noShiftLabel, BorderLayout.CENTER);
+            }
+
+            calendarGrid.add(dayPanel);
         }
 
         int totalCells = 42; // 6 rows * 7 columns
@@ -88,5 +116,10 @@ public class CalendarPanel extends JPanel{
 
         revalidate();
         repaint();
+    }
+
+    private Color getWorkerColor(Worker worker){
+        int hash = worker.getLastName().hashCode();
+        return new Color((hash >> 16) & 0xFF, (hash >> 8) & 0xFF, hash & 0xFF);
     }
 }
