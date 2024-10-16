@@ -1,31 +1,32 @@
 package com.lc_unifi.models;
 
-import java.util.List;
 import java.time.LocalTime;
+import java.util.LinkedList;
 
 public class Store {
-    private int id;
-    private String storeName;
+    private String storeId;
+    private String name;
     private String address;
-    private List<Worker> workers;
-    private Worker manager;
     private LocalTime openingTime;
     private LocalTime closingTime;
+    private LinkedList<Worker> workers;
 
-    public int getId() {
-        return id;
+    // Constructors, getters, and setters
+
+    public String getStoreId() {
+        return storeId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setStoreId(String storeId) {
+        this.storeId = storeId;
     }
 
-    public String getStoreName() {
-        return storeName;
+    public String getName() {
+        return name;
     }
 
-    public void setStoreName(String storeName) {
-        this.storeName = storeName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getAddress() {
@@ -36,22 +37,6 @@ public class Store {
         this.address = address;
     }
 
-    public List<Worker> getWorkers() {
-        return workers;
-    }
-
-    public void setWorkers(List<Worker> workers) {
-        this.workers = workers;
-    }
-
-    public Worker getManager() {
-        return manager;
-    }
-
-    public void setManager(Worker manager) {
-        this.manager = manager;
-    }
-
     public LocalTime getOpeningTime() {
         return openingTime;
     }
@@ -60,14 +45,19 @@ public class Store {
         this.openingTime = openingTime;
     }
 
-     public LocalTime getClosingTime() {
+    public LocalTime getClosingTime() {
         return closingTime;
     }
 
     public void setClosingTime(LocalTime closingTime) {
         this.closingTime = closingTime;
     }
+
+    public LinkedList<Worker> getWorkers() {
+        return workers;
+    }
+
+    public void setWorkers(LinkedList<Worker> workers) {
+        this.workers = workers;
+    }
 }
-
-
-

@@ -1,29 +1,37 @@
 package com.lc_unifi.models;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Random;
 
 public class Shift {
-    private int id;
+    private String shiftId;
+    private Worker assignedWorker;
     private LocalTime startTime;
     private LocalTime endTime;
-    //TODO: Add a breakTime field for the LONG shift type
-    private Worker worker;
+    private Store store;
+    private LocalDate date;
 
-    public Shift(Worker worker ,LocalTime startTime, LocalTime endTime) {
-        this.id = generateId();
-        this.worker = worker;
+    public Shift(LocalTime startTime, LocalTime endTime, Store store, LocalDate date) {
+        this.shiftId = java.util.UUID.randomUUID().toString();
+        this.assignedWorker = null;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.store = store;
+        this.date = date;
     }
 
+    // Getters and setters
 
-    public int generateId() {
-        return new Random().nextInt(1000); //FIXME: This is a temporary solution
+    public String getShiftId() {
+        return shiftId;
     }
 
-    public Worker getWorker() {
-        return worker;
+    public Worker getAssignedWorker() {
+        return assignedWorker;
+    }
+
+    public void setAssignedWorker(Worker assignedWorker) {
+        this.assignedWorker = assignedWorker;
     }
 
     public LocalTime getStartTime() {
@@ -32,5 +40,13 @@ public class Shift {
 
     public LocalTime getEndTime() {
         return endTime;
+    }
+
+    public Store getStore() {
+        return store;
+    }
+
+    public LocalDate getDate() {
+        return date;
     }
 }
