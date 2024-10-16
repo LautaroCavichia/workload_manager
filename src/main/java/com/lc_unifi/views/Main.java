@@ -24,7 +24,7 @@ public class Main {
         store.setName("Main Store");
         store.setOpeningTime(LocalTime.of(9, 30));
         store.setClosingTime(LocalTime.of(21, 0));
-        store.setWorkers(new LinkedList<>(Arrays.asList(worker1, worker2, worker3, worker4)));
+        store.setWorkers(new LinkedList<>(Arrays.asList(worker1, worker2, worker3)));
 
         Store store2 = new Store();
         store2.setStoreId("S002");
@@ -33,13 +33,15 @@ public class Main {
         store2.setClosingTime(LocalTime.of(21, 0));
         store2.setWorkers(new LinkedList<>(List.of(copertura1)));
 
+        boolean addThirdPersonOnWeekends = true;
 
         Scheduler scheduler = new Scheduler(
                 store,
                 List.of(store, store2),
-                SchedulePreset.THREE_SHORT,
+                SchedulePreset.TWO_SHORT,
                 LocalDate.of(2024, 11, 1),
-                LocalDate.of(2024, 11, 30)
+                LocalDate.of(2024, 11, 30),
+                addThirdPersonOnWeekends
         );
 
         Map<LocalDate, List<Shift>> schedule = scheduler.generateSchedule();
@@ -60,7 +62,7 @@ public class Main {
             System.out.println("Worker: " + worker.getFirstName() + " " + worker.getHoursBank());
         }
         for ( Worker worker : store2.getWorkers()) {
-            System.out.println("Copertura: " + worker.getLastName() + " " + (worker.getContractHours()-worker.getHoursBank()));
+            System.out.println("Copertura: " + worker.getLastName() + " " + worker.getHoursBank());
         }
 
     }

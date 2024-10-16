@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.cell.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.lc_unifi.views.MainController">
+    <top>
+        <ToolBar>
+            <Button text="Load Data" onAction="#handleLoadData"/>
+            <Button text="Generate Schedule" onAction="#handleGenerateSchedule"/>
+            <Label text="Preset:"/>
+            <ComboBox fx:id="presetComboBox" promptText="Select Preset"/>
+            <ComboBox fx:id="monthComboBox" promptText="Select Month"/>
+        </ToolBar>
+    </top>
+    <center>
+        <ScrollPane>
+            <GridPane fx:id="calendarGrid" gridLinesVisible="true" />
+        </ScrollPane>
+    </center>
+    <right>
+        <VBox fx:id="workersVBox" spacing="5" alignment="CENTER">
+            <Label text="Workers' Hours Bank" style="-fx-font-weight: bold;"/>
+            <Separator/>
+            <Label fx:id="coperturaLabel" text="Copertura Hours Needed: 0" style="-fx-font-weight: bold;"/>
+        </VBox>
+    </right>
+</BorderPane>

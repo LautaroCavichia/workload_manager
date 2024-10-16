@@ -60,4 +60,12 @@ public class Store {
     public void setWorkers(LinkedList<Worker> workers) {
         this.workers = workers;
     }
+
+    public int getTotalAvailableHours() {
+        int totalHours = 0;
+        for (Worker worker : workers) {
+            totalHours += worker.getHoursBank();
+        }
+        return totalHours;
+    }
 }

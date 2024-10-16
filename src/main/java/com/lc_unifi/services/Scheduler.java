@@ -3,6 +3,7 @@ package com.lc_unifi.services;
 import com.lc_unifi.models.*;
 import com.lc_unifi.enums.SchedulePreset;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -13,17 +14,23 @@ public class Scheduler {
     private SchedulePreset schedulePreset;
     private LocalDate startDate;
     private LocalDate endDate;
+    private boolean thirdPersonOnWeekends;
     private Map<LocalDate, List<Shift>> schedule;
     private Set<Worker> assignedWorkers;
+    private int totalShiftHours;
+    private boolean isCoperturaNeeded;
 
-    public Scheduler(Store store, List<Store> allStores, SchedulePreset schedulePreset, LocalDate startDate, LocalDate endDate) {
+    public Scheduler(Store store, List<Store> allStores, SchedulePreset schedulePreset, LocalDate startDate, LocalDate endDate, boolean addThirdPersonOnWeekends) {
         this.store = store;
         this.allStores = allStores;
         this.schedulePreset = schedulePreset;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.thirdPersonOnWeekends = addThirdPersonOnWeekends;
         this.schedule = new LinkedHashMap<>();
         this.assignedWorkers = new HashSet<>();
+        this.totalShiftHours = 0;
+        this.isCoperturaNeeded = false;
     }
 
     public Map<LocalDate, List<Shift>> generateSchedule() {
@@ -37,9 +44,29 @@ public class Scheduler {
 
     private void generateShifts() {
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            Shift[] shifts = schedulePreset.generateShifts(store, date);
+            SchedulePreset presetToUse = schedulePreset;
+
+            if (thirdPersonOnWeekends && isWeekend(date) && (schedulePreset == SchedulePreset.TWO_SHORT || schedulePreset == SchedulePreset.TWO_LONG)) {
+                presetToUse = SchedulePreset.THREE_SHORT;
+            }
+
+            Shift[] shifts = presetToUse.generateShifts(store, date);
             schedule.put(date, Arrays.asList(shifts));
+
+            for (Shift shift : shifts) {
+                totalShiftHours += shiftDurationInHours(shift);
+            }
         }
+    }
+
+    private void determineCoperturaNeed() {
+        int totalHours = store.getTotalAvailableHours();
+        isCoperturaNeeded = totalHours < totalShiftHours;
+    }
+
+    private boolean isWeekend(LocalDate date) {
+        DayOfWeek day = date.getDayOfWeek();
+        return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
     }
 
     private void assignWorkersToShifts() {
@@ -75,10 +102,22 @@ public class Scheduler {
 
         int minHours = availableWorkers.getFirst().getScheduledHours();
         List<Worker> leastLoadedWorkers = new ArrayList<>();
-        Random random = new Random();
-        double probability = 0.1;
-        if (random.nextDouble() < probability)
-            leastLoadedWorkers.add(getExternalWorkers(store).get(random.nextInt(getExternalWorkers(store).size())));
+        if (isCoperturaNeeded) {
+            Random random = new Random();
+            double coperturaProbability = 0.2;
+            if (random.nextDouble() < coperturaProbability) {
+                List<Worker> externalWorkers = getExternalWorkers(store);
+                if (!externalWorkers.isEmpty()) {
+                    Worker externalWorker = externalWorkers.get(random.nextInt(externalWorkers.size()));
+                    if (externalWorker.canWork(shift, date)) {
+                        shift.setAssignedWorker(externalWorker);
+                        updateWorkerAfterAssignment(externalWorker, shift, date);
+                        assignedWorkers.add(externalWorker);
+                        return true;
+                    }
+                }
+            }
+        }
         for (Worker worker : availableWorkers) {
             if (worker.getScheduledHours() == minHours) {
                 leastLoadedWorkers.add(worker);
