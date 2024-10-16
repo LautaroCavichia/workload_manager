@@ -17,6 +17,7 @@ public class Main {
         Worker worker2 = new Worker("2", "Due", 35);
         Worker worker3 = new Worker("3", "Tre", 30);
         Worker worker4 = new Worker("4", "Quattro", 25);
+        Worker copertura1 = new Worker("Copertura", "Uno", 30);
 
         Store store = new Store();
         store.setStoreId("S001");
@@ -25,9 +26,17 @@ public class Main {
         store.setClosingTime(LocalTime.of(21, 0));
         store.setWorkers(new LinkedList<>(Arrays.asList(worker1, worker2, worker3, worker4)));
 
+        Store store2 = new Store();
+        store2.setStoreId("S002");
+        store2.setName("Second Store");
+        store2.setOpeningTime(LocalTime.of(9, 30));
+        store2.setClosingTime(LocalTime.of(21, 0));
+        store2.setWorkers(new LinkedList<>(List.of(copertura1)));
+
+
         Scheduler scheduler = new Scheduler(
                 store,
-                List.of(store),
+                List.of(store, store2),
                 SchedulePreset.THREE_SHORT,
                 LocalDate.of(2024, 11, 1),
                 LocalDate.of(2024, 11, 30)
@@ -49,6 +58,9 @@ public class Main {
         }
         for ( Worker worker : store.getWorkers()) {
             System.out.println("Worker: " + worker.getFirstName() + " " + worker.getHoursBank());
+        }
+        for ( Worker worker : store2.getWorkers()) {
+            System.out.println("Copertura: " + worker.getLastName() + " " + (worker.getContractHours()-worker.getHoursBank()));
         }
 
     }

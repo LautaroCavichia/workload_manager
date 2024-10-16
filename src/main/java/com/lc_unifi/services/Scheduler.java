@@ -14,6 +14,7 @@ public class Scheduler {
     private LocalDate startDate;
     private LocalDate endDate;
     private Map<LocalDate, List<Shift>> schedule;
+    private Set<Worker> assignedWorkers;
 
     public Scheduler(Store store, List<Store> allStores, SchedulePreset schedulePreset, LocalDate startDate, LocalDate endDate) {
         this.store = store;
@@ -22,11 +23,14 @@ public class Scheduler {
         this.startDate = startDate;
         this.endDate = endDate;
         this.schedule = new LinkedHashMap<>();
+        this.assignedWorkers = new HashSet<>();
     }
 
     public Map<LocalDate, List<Shift>> generateSchedule() {
         generateShifts();
         assignWorkersToShifts();
+        Optimiser optimiser = new Optimiser(schedule, assignedWorkers);
+        optimiser.optimize();
         updateHoursBank();
         return schedule;
     }
@@ -71,6 +75,10 @@ public class Scheduler {
 
         int minHours = availableWorkers.getFirst().getScheduledHours();
         List<Worker> leastLoadedWorkers = new ArrayList<>();
+        Random random = new Random();
+        double probability = 0.1;
+        if (random.nextDouble() < probability)
+            leastLoadedWorkers.add(getExternalWorkers(store).get(random.nextInt(getExternalWorkers(store).size())));
         for (Worker worker : availableWorkers) {
             if (worker.getScheduledHours() == minHours) {
                 leastLoadedWorkers.add(worker);
@@ -82,18 +90,20 @@ public class Scheduler {
         Collections.shuffle(leastLoadedWorkers);
 
         for (Worker worker : leastLoadedWorkers) {
-            if (canWork(worker, shift, date)) {
+            if (worker.canWork(shift, date)) {
                 shift.setAssignedWorker(worker);
                 updateWorkerAfterAssignment(worker, shift, date);
+                assignedWorkers.add(worker);
                 return true;
             }
         }
 
         for (int i = leastLoadedWorkers.size(); i < availableWorkers.size(); i++) {
             Worker worker = availableWorkers.get(i);
-            if (canWork(worker, shift, date)) {
+            if (worker.canWork(shift, date)) {
                 shift.setAssignedWorker(worker);
                 updateWorkerAfterAssignment(worker, shift, date);
+                assignedWorkers.add(worker);
                 return true;
             }
         }
@@ -111,55 +121,10 @@ public class Scheduler {
         return available;
     }
 
-    private boolean canWork(Worker worker, Shift shift, LocalDate date) {
-
-        if (worker.getDaysOffRequests().contains(date)) {
-            return false;
-        }
-
-        if (worker.isAssignedOnDate(date)) {
-            return false;
-        }
-
-        if (worker.getLastWorkedDate() != null) {
-            long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(worker.getLastWorkedDate(), date);
-            if (daysBetween == 1) {
-                if (worker.getContinuousWorkingDays() >= 5) {
-                    return false;
-                }
-            } else if (daysBetween > 1) {
-                worker.setContinuousWorkingDays(0);
-            }
-        }
-
-        int shiftHours = shiftDurationInHours(shift);
-        int projectedHours = worker.getScheduledHours() + shiftHours;
-        int maxAllowedHours = worker.getTotalAvailableHours() + (worker.getContractHours() / 3);
-        if (projectedHours > maxAllowedHours) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private int shiftDurationInHours(Shift shift) {
-        return (int) java.time.Duration.between(shift.getStartTime(), shift.getEndTime()).toHours();
-    }
-
     private void updateWorkerAfterAssignment(Worker worker, Shift shift, LocalDate date) {
         int shiftHours = shiftDurationInHours(shift);
         worker.addScheduledHours(shiftHours);
-
-        if (worker.getLastWorkedDate() != null) {
-            long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(worker.getLastWorkedDate(), date);
-            if (daysBetween == 1) {
-                worker.setContinuousWorkingDays(worker.getContinuousWorkingDays() + 1);
-            } else {
-                worker.setContinuousWorkingDays(1);
-            }
-        } else {
-            worker.setContinuousWorkingDays(1);
-        }
+        worker.updateContinuousWorkingDays(date);
         worker.setLastWorkedDate(date);
         worker.addAssignedDate(date);
     }
@@ -170,9 +135,10 @@ public class Scheduler {
         externalWorkers.sort(Comparator.comparingInt(Worker::getScheduledHours));
 
         for (Worker worker : externalWorkers) {
-            if (canWork(worker, shift, date)) {
+            if (worker.canWork(shift, date)) {
                 shift.setAssignedWorker(worker);
                 updateWorkerAfterAssignment(worker, shift, date);
+                assignedWorkers.add(worker);
                 return true;
             }
         }
@@ -183,23 +149,19 @@ public class Scheduler {
         List<Worker> externalWorkers = new ArrayList<>();
         for (Store otherStore : allStores) {
             if (!otherStore.equals(currentStore)) {
-                for (Worker worker : otherStore.getWorkers()) {
-                    if (worker.getScheduledHours() < worker.getTotalAvailableHours()) {
-                        externalWorkers.add(worker);
-                    }
-                }
+                externalWorkers.addAll(otherStore.getWorkers());
             }
         }
         return externalWorkers;
     }
 
+    private int shiftDurationInHours(Shift shift) {
+        return (int) java.time.Duration.between(shift.getStartTime(), shift.getEndTime()).toHours();
+    }
+
     private void updateHoursBank() {
-        List<Worker> allWorkers = new ArrayList<>(store.getWorkers());
-        for (Worker worker : allWorkers) {
-            int scheduledHours = worker.getScheduledHours();
-            int totalContractHours = worker.getContractHours() * 4;
-            int newHoursBank = worker.getHoursBank() + (scheduledHours - totalContractHours);
-            worker.setHoursBank(newHoursBank);
+        for (Worker worker : assignedWorkers) {
+            worker.updateHoursBank();
         }
     }
 }

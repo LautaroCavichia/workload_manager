@@ -9,6 +9,6 @@ public class Manager extends Worker {
     }
 
     public List<Worker> getAvailableWorkers(LocalDate date) {
-        return this.getStore().getWorkers();
+        return this.getMainStore().getWorkers();
     }
 }
